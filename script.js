@@ -1,36 +1,23 @@
-const image = document.getElementById("image");
-const indicator = document.getElementById("indicator");
-let src = "https://api.slingacademy.com/public/sample-photos/1.jpeg";
-let fakeapi = "https://jsonplaceholder.typicode.com/todos/1/posts";
+import LocalCache from "./cahce.js";
+const show_data = document.getElementById("show-data");
+let fakeapi = "https://api.slingacademy.com/v1/sample-data/photos";
 
-const imageCacheName = "image-cache";
+let cache = new LocalCache();
 
-caches.match(src).then(async (response) => {
-  if (response) {
-    indicator.innerText = "Got the Response from Cache";
-    displayImage(response);
-  } else {
-    indicator.innerText = "Got the Response from Network";
-    const response = await downloadImage();
-    const res2 = response.clone();
-    displayImage(response);
-    cacheImage(res2);
-  }
-});
+let response = await cache.get(fakeapi);
+let data = await response.json();
+data = data["photos"];
 
-const downloadImage = async () => {
-  const response = await fetch(src);
-  return response;
-};
+for (let i = 0; i < data.length; i++) {
+  let image = await cache.get(data[i]["url"]);
+  let blob = await image.blob();
+  let url = URL.createObjectURL(blob);
 
-const displayImage = async (response) => {
-  const blob = await response.blob();
-  const _url = URL.createObjectURL(blob);
-  image.src = _url;
-};
+  let h3 = document.createElement("h3");
+  h3.innerText = data[i]["title"];
+  let img = document.createElement("img");
+  img.src = url;
 
-const cacheImage = async (response) => {
-  await caches.open(imageCacheName).then(async (cache) => {
-    await cache.put(response.url, response);
-  });
-};
+  show_data.appendChild(h3);
+  show_data.appendChild(img);
+}
